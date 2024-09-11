@@ -1,4 +1,4 @@
-# 🟩 Lista de Etapas
+# :bulb: Lista de Etapas
 
 Este documento fornece um guia passo a passo para rodar o projeto em sua máquina.
 
