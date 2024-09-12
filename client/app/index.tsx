@@ -11,6 +11,9 @@ import globalStyles from "@/styles";
 export default function App() {
   return (
     <View style={styles.container}>
+        <Link href="/screens/Home" style={{ color: "#066E3A", marginTop: 40 }}>
+            <h2>HOME</h2>
+        </Link>
       <Text style={globalStyles.h1}>Login</Text>
       <Text style={globalStyles.h2}>
         By signing in you are agreeing our term and privacy policy
