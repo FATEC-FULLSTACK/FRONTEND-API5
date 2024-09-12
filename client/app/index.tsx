@@ -18,7 +18,6 @@ export default function App() {
       <Text style={globalStyles.h2}>
         By signing in you are agreeing our term and privacy policy
       </Text>
-      <Link href="./screens/Register" style={{color: "#066E3A"}}>New User?</Link>
       <View>
         <Text style={styles.label}>Email:</Text>
         <TextInput
@@ -34,6 +33,8 @@ export default function App() {
           placeholder="Enter your password"
           secureTextEntry
         />
+        <h1>Não tem conta?</h1>
+      <Link href="./screens/Register" style={{color: "#066E3A"}}><h3>Registre-se</h3></Link>
       </View>
       <TouchableOpacity
         style={styles.button}
