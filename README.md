@@ -33,7 +33,9 @@ Antes de começar, certifique-se de que você tenha os seguintes pré-requisitos
    I -  Abra o projeto no Vscode <br>
    II - Entre na pasta client <br>
    III - Utilize o comando ```pnpm start``` com o **Virtual Device já inicializado no Android Studio**, dessa forma o expo reconhece o Device que está rodando em sua máquina. <br>
-   IV - Em caso de dúvida sobre os comandos para executar o projeto, é só verificar a pasta package.json
+   IV - Com o terminal rodando, pressione a tecla ```a``` para abrir o projeto no Virtual Device (Android) já inicializado. <br>
+   ![image](https://github.com/user-attachments/assets/b3bf4b27-a712-4d83-9773-a32491c68196)
+
 
 ## 3. Configuração do Emulador para Janela Separada
 
