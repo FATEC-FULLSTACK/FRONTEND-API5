@@ -15,7 +15,7 @@ const globalStyles = StyleSheet.create({
     marginBottom: 10,
   },
   h2: {
-    fontSize: 24,
+    fontSize: 23,
     fontWeight: 'semibold',
     color: '#333',
     marginBottom: 8,
