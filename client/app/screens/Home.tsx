@@ -1,17 +1,9 @@
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
-=======
->>>>>>> 7006cfbf39cba414ee529b1d959788736ea97874
->>>>>>> Stashed changes
 import { Text } from "react-native";
 import { Link } from "expo-router";
 import { Loader } from "@googlemaps/js-api-loader";
 
 export default function HomeScreen() {
-<<<<<<< Updated upstream
-=======
     const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
 
     useEffect(() => {
@@ -24,7 +16,7 @@ export default function HomeScreen() {
             (error) => {
                 console.error("Error getting user location: ", error);
                 // Fallback to a default location if user denies permission
-                setUserLocation({ lat: -23.16 , lng: -45.799 });
+                setUserLocation({ lat: -23.161, lng: -45.794 });
             }
         );
     }, []);
@@ -32,7 +24,7 @@ export default function HomeScreen() {
     useEffect(() => {
         if (userLocation) {
             const loader = new Loader({
-                apiKey: "Chave-api", 
+                apiKey: "YOUR_GOOGLE_MAPS_API_KEY", // Replace with your API key
                 version: "weekly",
             });
 
@@ -45,7 +37,6 @@ export default function HomeScreen() {
         }
     }, [userLocation]);
 
-<<<<<<< HEAD
     return (
         <>
             <div id="map" style={{ height: "90vh", width: "100%" }}></div>
@@ -64,19 +55,4 @@ export default function HomeScreen() {
             </tr>
         </>
     );
-=======
-export default function HomeScreen() {
->>>>>>> Stashed changes
-  return (
-    <>
-      <Text>Página Home</Text>
-      <Link href="/" style={{ color: "#066E3A", marginTop: 40 }}>
-        <Text>Voltar</Text>
-      </Link>
-    </>
-  );
-<<<<<<< Updated upstream
-=======
->>>>>>> 7006cfbf39cba414ee529b1d959788736ea97874
->>>>>>> Stashed changes
 }
