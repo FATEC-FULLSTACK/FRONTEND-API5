@@ -1,32 +1,81 @@
+import React, { useState } from "react";
 import CustomInput from "@/components/Input";
 import { Link } from "expo-router";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Alert } from "react-native";
 import { StyleSheet } from "react-native";
 
 export default function RegisterScreen() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = async () => {
+    try {
+      const response = await fetch("http://10.0.2.2:3000/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome_usuario: name,
+          email_usuario: email,
+          senha_usuario: password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro na requisição");
+      }
+
+      const data = await response.json();
+      Alert.alert(
+        "Sucesso",
+        `Usuário ${data.nome_usuario} registrado com sucesso!`
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert("Erro", error.message);
+      } else {
+        Alert.alert("Erro", "Ocorreu um erro desconhecido.");
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.register}>
-        <Image
-          source={require("../../assets/images/login/registerUser.png")}
-        />
-        <Text style={styles.title}>Register User</Text>
+        <View style={styles.greenDetail} />
+        <Text style={styles.title}>Cadastrar Usário</Text>
       </View>
-      <Text style={{ fontSize: 20 }}>
-        By registering in you are agreeing our{" "}
-        <Text style={{ color: "#066E3A" }}>term and privacy policy</Text>
+      <Text style={{ fontSize: 18 }}>
+        Ao se registrar, você está concordando com nossos{" "}
+        <Text style={{ color: "#066E3A" }}>
+          termos e política de privacidade
+        </Text>
       </Text>
       <View>
-        <CustomInput label="Name" placeholder="Digite seu nome..." />
+        <CustomInput
+          label="Name"
+          placeholder="Digite seu nome..."
+          value={name}
+          onChangeText={setName}
+        />
       </View>
       <View>
-        <CustomInput label="Email" placeholder="Digite seu email..." />
+        <CustomInput
+          label="Email"
+          placeholder="Digite seu email..."
+          value={email}
+          onChangeText={setEmail}
+        />
       </View>
       <View style={styles.inputContainer}>
         <CustomInput
           label="Password"
           placeholder="Digite sua senha..."
           secureTextEntry={true}
+          value={password}
+          onChangeText={setPassword}
         />
         <View
           style={{
@@ -36,13 +85,8 @@ export default function RegisterScreen() {
           }}
         ></View>
       </View>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => {
-          /* Handle register */
-        }}
-      >
-        <Text style={styles.buttonText}>Register</Text>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Cadastrar</Text>
       </TouchableOpacity>
       <Link
         href="/"
@@ -63,18 +107,22 @@ const styles = StyleSheet.create({
   register: {
     display: "flex",
     flexDirection: "row",
+    alignItems: "baseline",
     gap: 5,
-    alignItems: "center",
-    justifyContent: "flex-start",
-    marginTop: 20,
-    marginBottom: 15,
+    marginTop: 10,
+    marginBottom: 8,
     fontSize: 32,
     fontWeight: "bold",
-    left: "-1%",
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
+  },
+  greenDetail: {
+    backgroundColor: "#066E3A",
+    borderRadius: 5,
+    height: 22,
+    width: 8,
   },
   container: {
     marginTop: 16,
