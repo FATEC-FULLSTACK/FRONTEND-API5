@@ -3,11 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  PermissionsAndroid,
-  Platform,
   Alert,
 } from "react-native";
-import Geolocation from "react-native-geolocation-service";
+import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps'; // Importando o MapView
 import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
@@ -20,32 +19,19 @@ export default function HomeScreen() {
 
   const requestLocationPermission = async () => {
     try {
-      if (Platform.OS === "android") {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("Permissão de localização negada");
-          setErrorMsg("Permissão de localização negada");
-          return;
-        }
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log("Permissão de localização negada");
+        setErrorMsg("Permissão de localização negada");
+        return;
       }
 
-      Geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-        },
-        (error) => {
-          console.error("Erro ao obter a localização: ", error);
-          setErrorMsg("Erro ao obter a localização");
-          setUserLocation({ lat: -23.161, lng: -45.794 });
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
+      const location = await Location.getCurrentPositionAsync({});
+      setUserLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
     } catch (error) {
-      console.error("Erro na solicitação de permissão: ", error);
-      setErrorMsg("Erro ao solicitar permissão");
+      console.error("Erro ao obter a localização: ", error);
+      setErrorMsg("Erro ao obter a localização");
+      setUserLocation({ lat: -23.161, lng: -45.794 });
     }
   };
 
@@ -61,7 +47,6 @@ export default function HomeScreen() {
         {
           text: "Sair",
           onPress: () => {
-            // limpar qualquer dado de usuário, se necessário
             router.push("/");
           },
         },
@@ -81,13 +66,21 @@ export default function HomeScreen() {
     <View style={styles.container}>
       {errorMsg ? (
         <Text>{errorMsg}</Text>
+      ) : userLocation ? (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: userLocation.lat,
+            longitude: userLocation.lng,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          {/* Adicionando um marcador na localização do usuário */}
+          <Marker coordinate={{ latitude: userLocation.lat, longitude: userLocation.lng }} />
+        </MapView>
       ) : (
-        <Text>
-          Localização do usuário:{" "}
-          {userLocation
-            ? `${userLocation.lat}, ${userLocation.lng}`
-            : "Carregando..."}
-        </Text>
+        <Text>Carregando localização...</Text>
       )}
       <View style={styles.navbar}>
         <View style={styles.navItem}>
@@ -113,6 +106,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f2f2f2",
   },
+  map: {
+    width: "100%",
+    height: "80%", // Altura do mapa
+  },
   navbar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -127,11 +124,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 0.2,
     borderColor: "rgb(160, 160, 160)",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#066E3A",
   },
   actions: {
     fontSize: 18,
