@@ -5,7 +5,7 @@ import {
   StyleSheet,
   PermissionsAndroid,
   Platform,
-  Alert, // Importando Alert
+  Alert,
 } from "react-native";
 import Geolocation from "react-native-geolocation-service";
 import { useRouter } from "expo-router";

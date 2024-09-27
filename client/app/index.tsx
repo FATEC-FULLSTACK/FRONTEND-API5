@@ -1,155 +1,143 @@
+import React, { useEffect, useState } from "react";
 import {
-  Text,
   View,
+  Text,
   StyleSheet,
-  Image,
-  TouchableOpacity,
   Alert,
 } from "react-native";
-import { Link, router } from "expo-router";
-import globalStyles from "@/styles";
-import CustomInput from "@/components/Input";
-import { useState } from "react";
+import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps'; // Importando o MapView
+import { useRouter } from "expo-router";
 
-export default function App() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function HomeScreen() {
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleLogin = async () => {
+  const requestLocationPermission = async () => {
     try {
-      const response = await fetch("http://10.0.2.2:3000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert("Login bem-sucedido", "Bem-vindo à sua conta!", [
-          { text: "OK", onPress: () => router.push("/screens/Home") },
-        ]);
-      } else {
-        Alert.alert("Erro de login", data.message || "Credenciais inválidas", [
-          { text: "OK" },
-        ]);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log("Permissão de localização negada");
+        setErrorMsg("Permissão de localização negada");
+        return;
       }
+
+      const location = await Location.getCurrentPositionAsync({});
+      setUserLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
     } catch (error) {
-      Alert.alert("Erro", "Ocorreu um erro ao fazer login. Tente novamente.", [
-        { text: "OK" },
-      ]);
-      console.error("Erro ao fazer login:", error);
+      console.error("Erro ao obter a localização: ", error);
+      setErrorMsg("Erro ao obter a localização");
+      setUserLocation({ lat: -23.161, lng: -45.794 });
     }
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Você tem certeza que deseja sair?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Sair",
+          onPress: () => {
+            router.push("/");
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  useEffect(() => {
+    requestLocationPermission().catch((error) => {
+      console.error("Erro ao executar requestLocationPermission: ", error);
+      setErrorMsg("Erro ao solicitar permissão de localização");
+    });
+  }, []);
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.greenDetail} />
-        <Text style={globalStyles.h1}>Login</Text>
-      </View>
-      <View>
-        <Text style={{ fontSize: 18 }}>
-          Ao fazer login, você concorda com nossos{" "}
-          <Text style={{ color: "#066E3A" }}>
-            termos e política de privacidade
-          </Text>
-        </Text>
-      </View>
-      <View>
-        <CustomInput
-          label="Email"
-          placeholder="Digite seu email..."
-          value={email}
-          onChangeText={setEmail}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <CustomInput
-          label="Password"
-          placeholder="Digite sua senha..."
-          secureTextEntry={true}
-          value={password}
-          onChangeText={setPassword}
-        />
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
+      {errorMsg ? (
+        <Text>{errorMsg}</Text>
+      ) : userLocation ? (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: userLocation.lat,
+            longitude: userLocation.lng,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
           }}
         >
-          <Text style={styles.TextConta}>Não tem conta?</Text>
-          <Link href="./screens/Register" style={{ color: "#066E3A" }}>
-            <Text>Registre-se</Text>
-          </Link>
+          {/* Adicionando um marcador na localização do usuário */}
+          <Marker coordinate={{ latitude: userLocation.lat, longitude: userLocation.lng }} />
+        </MapView>
+      ) : (
+        <Text>Carregando localização...</Text>
+      )}
+      <View style={styles.navbar}>
+        <View style={styles.navItem}>
+          <Text onPress={handleLogout} style={styles.actions}>
+            Logout
+          </Text>
+        </View>
+        <View style={styles.navItem}>
+          <Text style={styles.actions}>Opções</Text>
+        </View>
+        <View style={styles.navItem}>
+          <Text style={styles.actions}>Ações</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: "white",
-    height: "100%",
-  },
-  inputContainer: {
-    marginBottom: 12,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 5,
-    marginBottom: 10,
-  },
-  greenDetail: {
-    backgroundColor: "#066E3A",
-    borderRadius: 5,
-    height: 22,
-    width: 8,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 4,
-    marginTop: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-  },
-  inputFocused: {
-    borderColor: "#066E3A",
-    borderWidth: 1.4,
-  },
-  button: {
-    backgroundColor: "#066E3A",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginVertical: 10,
+    backgroundColor: "#f2f2f2",
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 17,
-    fontWeight: "bold",
+  map: {
+    width: "100%",
+    height: "80%", // Altura do mapa
   },
-  TextConta: {
-    marginTop: 10,
-    marginBottom: 10,
+  navbar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#f2f2f2",
+    borderColor: "rgb(160, 160, 160)",
+    borderTopWidth: 1,
+    width: "100%",
+  },
+  navItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    borderWidth: 0.2,
+    borderColor: "rgb(160, 160, 160)",
+  },
+  actions: {
+    fontSize: 18,
+    color: "white",
+    fontWeight: "500",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 5,
+    backgroundColor: "#066E3A",
+    overflow: "hidden",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
   },
 });
