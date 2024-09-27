@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import * as Location from 'expo-location';
-import MapView, { Marker } from 'react-native-maps'; // Importando o MapView
+import { View, Text, StyleSheet, Alert } from "react-native";
+import * as Location from "expo-location";
+import MapView, { Marker } from "react-native-maps"; // Importando o MapView
 import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
@@ -17,21 +12,26 @@ export default function HomeScreen() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
 
+  const defaultLocation = { lat: -23.5505, lng: -46.6333 };
+
   const requestLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== "granted") {
         console.log("Permissão de localização negada");
         setErrorMsg("Permissão de localização negada");
         return;
       }
 
       const location = await Location.getCurrentPositionAsync({});
-      setUserLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
+      setUserLocation({
+        lat: location.coords.latitude,
+        lng: location.coords.longitude,
+      });
     } catch (error) {
       console.error("Erro ao obter a localização: ", error);
       setErrorMsg("Erro ao obter a localização");
-      setUserLocation({ lat: -23.161, lng: -45.794 });
+      setUserLocation(defaultLocation);
     }
   };
 
@@ -70,14 +70,20 @@ export default function HomeScreen() {
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: userLocation.lat,
-            longitude: userLocation.lng,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            latitude: defaultLocation.lat, 
+            longitude: defaultLocation.lng, 
+            latitudeDelta: 0.0922, 
+            longitudeDelta: 0.0421, 
           }}
         >
           {/* Adicionando um marcador na localização do usuário */}
-          <Marker coordinate={{ latitude: userLocation.lat, longitude: userLocation.lng }} />
+          <Marker
+            coordinate={{
+              latitude: userLocation ? userLocation.lat : defaultLocation.lat, 
+              longitude: userLocation ? userLocation.lng : defaultLocation.lng,
+            }}
+            title="Você está aqui"
+          />
         </MapView>
       ) : (
         <Text>Carregando localização...</Text>
@@ -108,7 +114,7 @@ const styles = StyleSheet.create({
   },
   map: {
     width: "100%",
-    height: "80%", // Altura do mapa
+    height: "91%", 
   },
   navbar: {
     flexDirection: "row",
