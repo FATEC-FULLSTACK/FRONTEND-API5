@@ -45,7 +45,7 @@ export default function RegisterScreen() {
     <View style={styles.container}>
       <View style={styles.register}>
         <View style={styles.greenDetail} />
-        <Text style={styles.title}>Cadastrar Usário</Text>
+        <Text style={styles.title}>Cadastrar Usuário</Text>
       </View>
       <Text style={{ fontSize: 18 }}>
         Ao se registrar, você está concordando com nossos{" "}
