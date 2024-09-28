@@ -52,9 +52,9 @@ export default function App() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.greenDetail} />
-        {/* <Link href="/screens/Home" style={{ color: "#066E3A", marginTop: 40 }}>
+        <Link href="/screens/Home" style={{ color: "#066E3A", marginTop: 40 }}>
             <Text>HOME</Text>
-        </Link> */}
+        </Link> 
         <Text style={globalStyles.h1}>Login</Text>
       </View>
       <View>
