@@ -7,10 +7,12 @@ import {
   TextInput,
   Button,
   Modal,
+  TouchableOpacity,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { useRouter } from "expo-router";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<{
@@ -35,6 +37,11 @@ export default function HomeScreen() {
   const [newRegiao, setNewRegiao] = useState("");
   const [newDadosPluviometricos, setNewDadosPluviometricos] = useState("");
   const router = useRouter();
+  const [focusedItem, setFocusedItem] = useState(null);
+
+  const handleFocus = (item: any) => {
+    setFocusedItem(item);
+  };
 
   const defaultLocation = { lat: -23.5505, lng: -46.6333 };
 
@@ -184,18 +191,43 @@ export default function HomeScreen() {
       ) : (
         <Text>Carregando localização...</Text>
       )}
+
       <View style={styles.navbar}>
-        <View style={styles.navItem}>
-          <Text onPress={handleLogout} style={styles.actions}>
-            Logout
-          </Text>
-        </View>
-        <View style={styles.navItem}>
-          <Text style={styles.actions}>Opções</Text>
-        </View>
-        <View style={styles.navItem}>
-          <Text style={styles.actions}>Ações</Text>
-        </View>
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            focusedItem === "logout" && styles.focusedItem,
+          ]}
+          onPress={() => {
+            handleFocus("logout");
+            handleLogout();
+          }}
+        >
+          <Icon name="logout" size={25} color="#066E3A" />
+          <Text style={styles.navbarText}>Logout</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            focusedItem === "settings" && styles.focusedItem,
+          ]}
+          onPress={() => handleFocus("settings")}
+        >
+          <Icon name="settings" size={25} color="#066E3A" />
+          <Text style={styles.navbarText}>Opções</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            focusedItem === "actions" && styles.focusedItem,
+          ]}
+          onPress={() => handleFocus("actions")}
+        >
+          <Icon name="build" size={25} color="#066E3A" />
+          <Text style={styles.navbarText}>Ações</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Modal para edição de informações */}
@@ -245,27 +277,40 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: "#f2f2f2",
+  },
+  focusedItem: {
+    borderBottomWidth: 2.5,
+    borderBottomColor: "#66BB6A",
+    borderRadius: 5,
+    paddingBottom: 5,
   },
   navbar: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#f2f2f2",
-    borderColor: "rgb(160, 160, 160)",
-    borderTopWidth: 1,
-    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-evenly",
+    backgroundColor: "white",
+    padding: 5,
+    width: "auto",
+    height: 80,
+  },
+  navbarText: {
+    color: "#066E3A",
+    fontSize: 12.5,
+    fontWeight: "bold",
+  },
+  navItem: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    color: "white",
+    padding: 10,
+    borderRadius: 5,
+    overflow: "hidden",
   },
   map: {
     width: "100%",
     height: "91%",
-  },
-  navItem: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-    borderWidth: 0.2,
-    borderColor: "rgb(160, 160, 160)",
   },
   buttonModal: {
     flexDirection: "row",
@@ -284,21 +329,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#BF0000",
     borderRadius: 5,
     flex: 1,
-  },
-  actions: {
-    fontSize: 18,
-    color: "white",
-    fontWeight: "500",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 5,
-    backgroundColor: "#066E3A",
-    overflow: "hidden",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
   },
   buttonContainer: {
     padding: 10,
