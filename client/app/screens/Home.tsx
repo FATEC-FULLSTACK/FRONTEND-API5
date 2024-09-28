@@ -11,10 +11,11 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker, Callout } from "react-native-maps";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
 import globalStyles from "@/styles";
+import { useNavigation } from "@react-navigation/native";
 
 export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<{
@@ -41,6 +42,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const [focusedItem, setFocusedItem] = useState(null);
   const [search, setSearch] = useState("");
+
+  const navigation = useNavigation();
 
   const handleFocus = (item: any) => {
     setFocusedItem(item);
@@ -267,10 +270,13 @@ export default function HomeScreen() {
             styles.navItem,
             focusedItem === "actions" && styles.focusedItem,
           ]}
-          onPress={() => handleFocus("actions")}
+          onPress={() => {
+            handleFocus("actions"); 
+            navigation.navigate("screens/Pontos"); 
+          }}
         >
-          <Icon name="build" size={25} color="#066E3A" />
-          <Text style={styles.navbarText}>Ações</Text>
+          <Icon name="place" size={25} color="#066E3A" />
+          <Text style={styles.navbarText}>Pontos</Text>
         </TouchableOpacity>
       </View>
 

@@ -7,6 +7,13 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="screens/Register" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="screens/Pontos"
+        options={{
+          headerShown: true,
+          title: "Pontos Cadastrados",
+        }}
+      />
       <Stack.Screen name="screens/Home" options={{ headerShown: false }} />
     </Stack>
   );
