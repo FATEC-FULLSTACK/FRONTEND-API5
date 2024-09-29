@@ -1,4 +1,4 @@
-import { Link, router } from "expo-router";
+import { Link, router, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -20,6 +20,8 @@ interface Ponto {
 const Pontos: React.FC = () => {
   const [pontos, setPontos] = useState<Ponto[]>([]);
   const [focusedItem, setFocusedItem] = useState(null);
+  const navigation = useNavigation();
+
   const handleFocus = (item: any) => {
     setFocusedItem(item);
   };
@@ -95,6 +97,20 @@ const Pontos: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.navItem,
+            focusedItem === "localidade" && styles.focusedItem,
+          ]}
+          onPress={() => {
+            handleFocus("localidade"); 
+            navigation.navigate("screens/Coordenadas"); 
+          }}
+        >
+          <Icon name="public" size={25} color="#066E3A" />
+          <Text style={styles.navbarText}>Localidade</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
             focusedItem === "settings" && styles.focusedItem,
           ]}
           onPress={() => handleFocus("settings")}
@@ -131,7 +147,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   contentContainer: {
-    height: "93%",
+    height: "90%",
   },
   navbar: {
     flexDirection: "row",

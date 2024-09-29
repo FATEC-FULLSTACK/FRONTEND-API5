@@ -257,6 +257,20 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={[
             styles.navItem,
+            focusedItem === "localidade" && styles.focusedItem,
+          ]}
+          onPress={() => {
+            handleFocus("localidade"); 
+            navigation.navigate("screens/Coordenadas"); 
+          }}
+        >
+          <Icon name="public" size={25} color="#066E3A" />
+          <Text style={styles.navbarText}>Localidade</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
             focusedItem === "settings" && styles.focusedItem,
           ]}
           onPress={() => handleFocus("settings")}

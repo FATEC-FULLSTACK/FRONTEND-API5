@@ -14,6 +14,13 @@ export default function RootLayout() {
           title: "Pontos Cadastrados",
         }}
       />
+      <Stack.Screen
+        name="screens/Coordenadas"
+        options={{
+          headerShown: true,
+          title: "Achar Coordenada",
+        }}
+      />
       <Stack.Screen name="screens/Home" options={{ headerShown: false }} />
     </Stack>
   );
