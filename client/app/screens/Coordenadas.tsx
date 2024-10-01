@@ -33,7 +33,7 @@ const GeocodingScreen: React.FC = () => {
 
   const fetchCoordinates = async () => {
     try {
-      const API_KEY = GOOGLE_API_KEY; // Substitua pela sua chave de API
+      const API_KEY = GOOGLE_API_KEY;
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${location}&key=${API_KEY}`
       );
