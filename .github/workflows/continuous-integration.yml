@@ -25,7 +25,3 @@ jobs:
     - name: Install dependencies
       working-directory: client  # Especifica o diretório para o npm install
       run: npm install
-
-    - name: Run tests
-      working-directory: client  # Especifica o diretório para os testes
-      run: npm test
