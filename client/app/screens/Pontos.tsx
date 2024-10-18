@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Ponto {
   id: number;
@@ -37,14 +38,22 @@ const Pontos: React.FC = () => {
         },
         {
           text: "Sair",
-          onPress: () => {
-            router.push("/");
+          onPress: async () => {
+            try {
+              // Zera o token (remove o JWT do AsyncStorage)
+              await AsyncStorage.removeItem('userToken');
+  
+              router.push("/");
+            } catch (error) {
+              console.error("Erro ao fazer logout:", error);
+            }
           },
         },
       ],
       { cancelable: false }
     );
   };
+
 
   // Simulação de dados cadastrados (substitua isso pela sua lógica real de recuperação de dados)
   useEffect(() => {

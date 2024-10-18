@@ -16,6 +16,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
 import globalStyles from "@/styles";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<{
@@ -89,7 +90,36 @@ export default function HomeScreen() {
     }
   };
 
-  const handleLogout = () => {
+  /* const handleLogout = () => {
+    const navigation = useNavigation();  // Usar React Navigation para navegação
+  
+    Alert.alert(
+      "Logout",
+      "Você tem certeza que deseja sair?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Sair",
+          onPress: async () => {
+            try {
+              // Remove o token JWT do AsyncStorage
+              await AsyncStorage.removeItem('userToken');
+              
+              router.push('/')
+            } catch (error) {
+              console.error("Erro ao fazer logout:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+ */
+    const handleLogout = () => {
     Alert.alert(
       "Logout",
       "Você tem certeza que deseja sair?",

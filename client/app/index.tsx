@@ -11,6 +11,8 @@ import globalStyles from "@/styles";
 import CustomInput from "@/components/Input";
 import * as Location from 'expo-location'; 
 import { useState } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function App() {
   const [email, setEmail] = useState("");
@@ -28,10 +30,13 @@ export default function App() {
           password,
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
+        // Armazenar o token JWT recebido no AsyncStorage
+        await AsyncStorage.setItem('userToken', data.token);
+  
         Alert.alert("Login bem-sucedido", "Bem-vindo à sua conta!", [
           { text: "OK", onPress: () => router.push("/screens/Home") },
         ]);

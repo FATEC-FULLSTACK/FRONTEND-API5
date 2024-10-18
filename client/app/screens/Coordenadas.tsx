@@ -81,12 +81,16 @@ const GeocodingScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
+      
+
         <TextInput
           style={styles.input}
           placeholder="Digite uma região (ex: São Paulo)"
           value={location}
           onChangeText={setLocation}
         />
+        
+
         <TouchableOpacity
           style={styles.searchButton}
           onPress={fetchCoordinates}
@@ -157,7 +161,8 @@ const GeocodingScreen: React.FC = () => {
           ]}
           onPress={() => {
             handleFocus("actions");
-            navigation.navigate("screens/Pontos");
+            /* navigation.navigate("screens/Pontos"); */
+            navigation.navigate("screens/UserInfo");
           }}
         >
           <Icon name="place" size={25} color="#066E3A" />
