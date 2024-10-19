@@ -5,41 +5,24 @@ import {
   StyleSheet,
   Alert,
   TextInput,
-  Button,
-  Modal,
   TouchableOpacity,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker, Callout } from "react-native-maps";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
-import globalStyles from "@/styles";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import PontoCRUD from "@/components/Pontos/PontoCRUD";
 
 export default function HomeScreen() {
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [markers, setMarkers] = useState<
-    {
-      lat: number;
-      lng: number;
-      clima: string;
-      regiao: string;
-      dadosPluviometricos: string;
-    }[]
-  >([]);
+  const [userData, setUserData] = useState<any>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [markers, setMarkers] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(
-    null
-  );
-  const [isModalVisible, setModalVisible] = useState(false); // Controle de visibilidade do modal
-  const [newClima, setNewClima] = useState("");
-  const [newRegiao, setNewRegiao] = useState("");
-  const [newDadosPluviometricos, setNewDadosPluviometricos] = useState("");
+  const [selectedMarker, setSelectedMarker] = useState<any | null>(null);
+  const [isModalVisible, setModalVisible] = useState(false);
   const router = useRouter();
   const [focusedItem, setFocusedItem] = useState(null);
   const [search, setSearch] = useState("");
@@ -50,13 +33,45 @@ export default function HomeScreen() {
     setFocusedItem(item);
   };
 
+  // Função para buscar o usuário conectado
+  const fetchUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch("http://10.0.2.2:3000/ck", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUserData(data);
+      } else {
+        Alert.alert("Erro", data.message || "Erro ao buscar dados do usuário.");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao buscar os dados do usuário.");
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
   const defaultLocation = { lat: -23.5505, lng: -46.6333 };
 
   const requestLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        console.log("Permissão de localização negada");
         setErrorMsg("Permissão de localização negada");
         return;
       }
@@ -73,76 +88,9 @@ export default function HomeScreen() {
     }
   };
 
-  // Função para atualizar a região do mapa com base nas coordenadas
-  const handleSearch = () => {
-    const coords = search.split(",");
-    if (coords.length === 2) {
-      const latitude = parseFloat(coords[0].trim());
-      const longitude = parseFloat(coords[1].trim());
-
-      if (!isNaN(latitude) && !isNaN(longitude)) {
-        setUserLocation({ lat: latitude, lng: longitude });
-      } else {
-        alert("Por favor, insira coordenadas válidas (latitude, longitude).");
-      }
-    } else {
-      alert("Formato de coordenadas inválido. Use: 'latitude, longitude'.");
-    }
-  };
-
-  /* const handleLogout = () => {
-    const navigation = useNavigation();  // Usar React Navigation para navegação
-  
-    Alert.alert(
-      "Logout",
-      "Você tem certeza que deseja sair?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: "Sair",
-          onPress: async () => {
-            try {
-              // Remove o token JWT do AsyncStorage
-              await AsyncStorage.removeItem('userToken');
-              
-              router.push('/')
-            } catch (error) {
-              console.error("Erro ao fazer logout:", error);
-            }
-          },
-        },
-      ],
-      { cancelable: false }
-    );
-  };
- */
-    const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Você tem certeza que deseja sair?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: "Sair",
-          onPress: () => {
-            router.push("/");
-          },
-        },
-      ],
-      { cancelable: false }
-    );
-  };
-
   useEffect(() => {
     requestLocationPermission().catch((error) => {
-      console.error("Erro ao executar requestLocationPermission: ", error);
-      setErrorMsg("Erro ao solicitar permissão de localização");
+      console.error("Erro ao solicitar permissão de localização: ", error);
     });
   }, []);
 
@@ -153,38 +101,86 @@ export default function HomeScreen() {
     setMarkers((currentMarkers) => [
       ...currentMarkers,
       {
-        lat: latitude,
-        lng: longitude,
-        clima: "", // Inicialmente vazio para o usuário preencher
-        regiao: "",
-        dadosPluviometricos: "",
+        apelido: "Novo Ponto", // Default value for apelido
+        lat_long: { latitude, longitude },
+        notificacoes: [],
       },
     ]);
   };
 
   // Função para abrir o modal de edição ao clicar em um marcador
-  const handleMarkerPress = (index: number) => {
-    setSelectedMarkerIndex(index);
+  const handleMarkerPress = (marker: any) => {
+    setSelectedMarker(marker);
     setModalVisible(true);
-    // Preencher os campos do modal com os dados atuais do marcador
-    const marker = markers[index];
-    setNewClima(marker.clima);
-    setNewRegiao(marker.regiao);
-    setNewDadosPluviometricos(marker.dadosPluviometricos);
+  };
+  // Função para deletar o ponto
+  const handleDeleteMarker = async (marker: any) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/ponto/${marker._id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setMarkers((prevMarkers) => prevMarkers.filter((m) => m !== marker));
+        setModalVisible(false); // Fechar modal após deletar
+      } else {
+        Alert.alert("Erro", "Erro ao deletar o ponto.");
+      }
+    } catch (error) {
+      console.error("Erro ao deletar o ponto:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao deletar o ponto.");
+    }
   };
 
-  // Função para salvar os dados do modal e atualizar o marcador
-  const handleSave = () => {
-    if (selectedMarkerIndex !== null) {
-      const updatedMarkers = [...markers];
-      updatedMarkers[selectedMarkerIndex] = {
-        ...updatedMarkers[selectedMarkerIndex],
-        clima: newClima,
-        regiao: newRegiao,
-        dadosPluviometricos: newDadosPluviometricos,
-      };
-      setMarkers(updatedMarkers);
-      setModalVisible(false); // Fechar o modal após salvar
+  // Função para salvar o ponto
+  const handleSaveMarker = async (updatedMarker: any) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+        return;
+      }
+
+      // Fazendo a requisição para salvar o ponto no backend
+      const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/ponto`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          apelido: updatedMarker.apelido,
+          lat_long: updatedMarker.lat_long,
+          notificacoes: updatedMarker.notificacoes,
+        }),
+      });
+
+      if (response.ok) {
+        setMarkers((prevMarkers) =>
+          prevMarkers.map((m) =>
+            m.lat_long.latitude === updatedMarker.lat_long.latitude &&
+              m.lat_long.longitude === updatedMarker.lat_long.longitude
+              ? updatedMarker
+              : m
+          )
+        );
+        setModalVisible(false); // Fechar modal após salvar
+      } else {
+        const errorData = await response.json();
+        Alert.alert("Erro", errorData.message || "Erro ao salvar o ponto.");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar o ponto:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao salvar o ponto.");
     }
   };
 
@@ -192,12 +188,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.HomeTitleContainer}>
         <Text style={styles.HomeTitle}>Kersys</Text>
-        <FontAwesomeIcon
-          name="bell"
-          size={20}
-          color="#FFFFFF"
-          style={styles.notificationIcon}
-        />
+        <FontAwesomeIcon name="bell" size={20} color="#FFFFFF" style={styles.notificationIcon} />
       </View>
       <View style={styles.searchInputContainer}>
         <TextInput
@@ -206,10 +197,7 @@ export default function HomeScreen() {
           value={search}
           onChangeText={setSearch}
         />
-        <TouchableOpacity
-          style={styles.searchInputButton}
-          onPress={handleSearch}
-        >
+        <TouchableOpacity style={styles.searchInputButton} onPress={() => { }}>
           <Text style={styles.searchButtonText}>Buscar</Text>
         </TouchableOpacity>
       </View>
@@ -228,36 +216,25 @@ export default function HomeScreen() {
             }}
             onLongPress={handleMapLongPress}
           >
-            {userLocation && (
-              <Marker
-                coordinate={{
-                  latitude: userLocation.lat,
-                  longitude: userLocation.lng,
-                }}
-                title="Você está aqui"
-              />
-            )}
-
-            {/* Mapeia e exibe todos os marcadores adicionados */}
             {markers.map((marker, index) => (
               <Marker
                 key={index}
                 coordinate={{
-                  latitude: marker.lat,
-                  longitude: marker.lng,
+                  latitude: marker.lat_long.latitude,
+                  longitude: marker.lat_long.longitude,
                 }}
-                onPress={() => handleMarkerPress(index)} // Abre o modal ao clicar
+                onPress={() => handleMarkerPress(marker)} // Abre o modal ao clicar
               >
                 <Callout>
                   <View style={styles.calloutView}>
-                    <Text style={styles.calloutTitle}>
-                      Informações do Ponto
-                    </Text>
-                    <Text>Clima: {marker.clima || "Não informado"}</Text>
-                    <Text>Região: {marker.regiao || "Não informado"}</Text>
+                    <Text style={styles.calloutTitle}>Informações do Ponto</Text>
+                    <Text>Latitude: {marker.lat_long.latitude}</Text>
+                    <Text>Longitude: {marker.lat_long.longitude}</Text>
                     <Text>
-                      Dados Pluviométricos:{" "}
-                      {marker.dadosPluviometricos || "Não informado"}
+                      Notificações:{" "}
+                      {marker.notificacoes.length > 0
+                        ? marker.notificacoes.map((n) => n.mensagem).join(", ")
+                        : "Nenhuma notificação"}
                     </Text>
                   </View>
                 </Callout>
@@ -269,102 +246,41 @@ export default function HomeScreen() {
         <Text>Carregando localização...</Text>
       )}
 
+      {/* Componente de CRUD do Ponto */}
+      {selectedMarker && (
+        <PontoCRUD
+          visible={isModalVisible}
+          onClose={() => setModalVisible(false)}
+          onSave={handleSaveMarker}
+          onDelete={handleDeleteMarker}
+          marker={selectedMarker}
+        />
+      )}
+
+      {/* Navegação */}
       <View style={styles.navbar}>
         <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "logout" && styles.focusedItem,
-          ]}
+          style={[styles.navItem, focusedItem === "logout" && styles.focusedItem]}
           onPress={() => {
             handleFocus("logout");
-            handleLogout();
+            Alert.alert("Logout", "Você tem certeza que deseja sair?", [
+              { text: "Cancelar", style: "cancel" },
+              {
+                text: "Sair",
+                onPress: () => {
+                  AsyncStorage.removeItem("userToken");
+                  router.push("/");
+                },
+              },
+            ]);
           }}
         >
           <Icon name="logout" size={25} color="#066E3A" />
           <Text style={styles.navbarText}>Logout</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "localidade" && styles.focusedItem,
-          ]}
-          onPress={() => {
-            handleFocus("localidade"); 
-            navigation.navigate("screens/Coordenadas"); 
-          }}
-        >
-          <Icon name="public" size={25} color="#066E3A" />
-          <Text style={styles.navbarText}>Localidade</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "settings" && styles.focusedItem,
-          ]}
-          onPress={() => handleFocus("settings")}
-        >
-          <Icon name="settings" size={25} color="#066E3A" />
-          <Text style={styles.navbarText}>Opções</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "actions" && styles.focusedItem,
-          ]}
-          onPress={() => {
-            handleFocus("actions"); 
-            navigation.navigate("screens/Pontos"); 
-          }}
-        >
-          <Icon name="place" size={25} color="#066E3A" />
-          <Text style={styles.navbarText}>Pontos</Text>
-        </TouchableOpacity>
+        {/* Outros botões do NavBar */}
       </View>
-
-      {/* Modal para edição de informações */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Editar Informações do Ponto</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Clima"
-            value={newClima}
-            onChangeText={setNewClima}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Região"
-            value={newRegiao}
-            onChangeText={setNewRegiao}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Dados Pluviométricos"
-            value={newDadosPluviometricos}
-            onChangeText={setNewDadosPluviometricos}
-          />
-          <View style={styles.buttonModal}>
-            <Button
-              title="Salvar"
-              onPress={handleSave}
-              color="#066E3A" // Define a cor do botão "Salvar"
-            />
-            <Button
-              title="Cancelar"
-              onPress={() => setModalVisible(false)}
-              color="#BF0000" // Fecha o modal
-            />
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

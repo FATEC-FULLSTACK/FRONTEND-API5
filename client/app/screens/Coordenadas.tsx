@@ -26,6 +26,7 @@ const GeocodingScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [focusedItem, setFocusedItem] = useState(null);
   const navigation = useNavigation();
+  
 
   const handleFocus = (item: any) => {
     setFocusedItem(item);

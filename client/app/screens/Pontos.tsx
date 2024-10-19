@@ -9,8 +9,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import FontAwesomeIcon from "react-native-vector-icons/FontAwesome"; // Ícones adicionais, caso queira usar
-import styles from './PontosStyles'; // Importando os estilos
+import styles from './PontosStyles';
 
 interface Ponto {
   _id: string;
