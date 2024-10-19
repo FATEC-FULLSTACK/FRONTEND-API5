@@ -1,25 +1,34 @@
-import { Link, router, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   FlatList,
-  StyleSheet,
   TouchableOpacity,
   Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import FontAwesomeIcon from "react-native-vector-icons/FontAwesome"; // Ícones adicionais, caso queira usar
+import styles from './PontosStyles'; // Importando os estilos
 
 interface Ponto {
-  id: number;
-  nome: string;
-  descricao: string;
+  _id: string;
+  apelido: string;
+  lat_long: {
+    latitude: number;
+    longitude: number;
+  };
+  notificacoes: {
+    _id: string;
+    mensagem: string;
+  }[];
 }
 
 const Pontos: React.FC = () => {
   const [pontos, setPontos] = useState<Ponto[]>([]);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [focusedItem, setFocusedItem] = useState(null);
   const navigation = useNavigation();
 
@@ -40,10 +49,8 @@ const Pontos: React.FC = () => {
           text: "Sair",
           onPress: async () => {
             try {
-              // Zera o token (remove o JWT do AsyncStorage)
-              await AsyncStorage.removeItem('userToken');
-  
-              router.push("/");
+              await AsyncStorage.removeItem("userToken");
+              navigation.navigate("/"); 
             } catch (error) {
               console.error("Erro ao fazer logout:", error);
             }
@@ -54,27 +61,101 @@ const Pontos: React.FC = () => {
     );
   };
 
+  const fetchUserData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+        return;
+      }
 
-  // Simulação de dados cadastrados (substitua isso pela sua lógica real de recuperação de dados)
+      const response = await fetch('http://10.0.2.2:3000/ck', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUserData(data);
+        fetchPontos(data._id);
+      } else {
+        Alert.alert("Erro", data.message || "Erro ao buscar dados do usuário.");
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+      Alert.alert("Erro", "Ocorreu um erro ao buscar os dados do usuário.");
+    }
+  };
+
+  const fetchPontos = async (userId: string) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch(`http://10.0.2.2:3000/user/${userId}/points`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPontos(data);
+      } else {
+        Alert.alert("Erro", "Erro ao buscar pontos do usuário.");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar pontos:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao buscar os pontos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPontos = async () => {
-      // Aqui você pode fazer uma chamada para sua API ou usar dados mockados
-      const dadosMockados: Ponto[] = [
-        { id: 1, nome: "Ponto 1", descricao: "Descrição do Ponto 1" },
-        { id: 2, nome: "Ponto 2", descricao: "Descrição do Ponto 2" },
-        { id: 3, nome: "Ponto 3", descricao: "Descrição do Ponto 3" },
-      ];
-      setPontos(dadosMockados);
-    };
-
-    fetchPontos();
+    fetchUserData();
   }, []);
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Carregando...</Text>
+      </View>
+    );
+  }
+
   const renderItem = ({ item }: { item: Ponto }) => (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemTitle}>{item.nome}</Text>
-      <Text style={styles.itemDescription}>{item.descricao}</Text>
-    </View>
+    <TouchableOpacity
+      style={styles.itemContainer}
+      onPress={() =>
+        navigation.navigate("MapScreen", {
+          latitude: item.lat_long.latitude,
+          longitude: item.lat_long.longitude,
+        })
+      }
+    >
+      {/* Ícone de local em vez de imagem de miniatura */}
+      <Icon name="place" size={50} color="#FF6347" />
+      <View style={styles.infoContainer}>
+        <Text style={styles.itemTitle}>{item.apelido}</Text>
+        <Text style={styles.itemDescription}>
+          Latitude: {item.lat_long.latitude}, Longitude: {item.lat_long.longitude}
+        </Text>
+        {item.notificacoes.map((notificacao) => (
+          <View key={notificacao._id} style={styles.alertContainer}>
+            {/* Ícone de alerta em vez de imagem */}
+            <Icon name="warning" size={20} color="#FF0000" />
+            <Text style={styles.notification}>{notificacao.mensagem}</Text>
+          </View>
+        ))}
+      </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -84,16 +165,13 @@ const Pontos: React.FC = () => {
         <FlatList
           data={pontos}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContainer}
         />
       </View>
       <View style={styles.navbar}>
         <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "logout" && styles.focusedItem,
-          ]}
+          style={[styles.navItem, focusedItem === "logout" && styles.focusedItem]}
           onPress={() => {
             handleFocus("logout");
             handleLogout();
@@ -104,13 +182,10 @@ const Pontos: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "localidade" && styles.focusedItem,
-          ]}
+          style={[styles.navItem, focusedItem === "localidade" && styles.focusedItem]}
           onPress={() => {
-            handleFocus("localidade"); 
-            navigation.navigate("screens/Coordenadas"); 
+            handleFocus("localidade");
+            navigation.navigate("Coordenadas");
           }}
         >
           <Icon name="public" size={25} color="#066E3A" />
@@ -118,10 +193,7 @@ const Pontos: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "settings" && styles.focusedItem,
-          ]}
+          style={[styles.navItem, focusedItem === "settings" && styles.focusedItem]}
           onPress={() => handleFocus("settings")}
         >
           <Icon name="settings" size={25} color="#066E3A" />
@@ -129,83 +201,15 @@ const Pontos: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.navItem,
-            focusedItem === "actions" && styles.focusedItem,
-          ]}
+          style={[styles.navItem, focusedItem === "actions" && styles.focusedItem]}
           onPress={() => handleFocus("actions")}
         >
           <Icon name="place" size={25} color="#066E3A" />
-          <Link href="./Pontos">
-            <Text style={styles.navbarText}>Pontos</Text>
-          </Link>
+          <Text style={styles.navbarText}>Pontos</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  navItem: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    color: "white",
-    padding: 10,
-    borderRadius: 5,
-    overflow: "hidden",
-  },
-  contentContainer: {
-    height: "90%",
-  },
-  navbar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-evenly",
-    backgroundColor: "white",
-    padding: 5,
-    width: "auto",
-    height: 80,
-  },
-  navbarText: {
-    color: "#066E3A",
-    fontSize: 12.5,
-    fontWeight: "bold",
-  },
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#fff",
-  },
-  focusedItem: {
-    borderBottomWidth: 2.5,
-    borderBottomColor: "#66BB6A",
-    borderRadius: 5,
-    paddingBottom: 5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  listContainer: {
-    paddingBottom: 16,
-  },
-  itemContainer: {
-    padding: 12,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-  },
-  itemTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  itemDescription: {
-    fontSize: 14,
-    color: "#666",
-  },
-});
 
 export default Pontos;

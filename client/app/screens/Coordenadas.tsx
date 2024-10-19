@@ -161,8 +161,8 @@ const GeocodingScreen: React.FC = () => {
           ]}
           onPress={() => {
             handleFocus("actions");
-            /* navigation.navigate("screens/Pontos"); */
-            navigation.navigate("screens/UserInfo");
+            navigation.navigate("screens/Pontos");
+            /* navigation.navigate("screens/UserInfo"); */
           }}
         >
           <Icon name="place" size={25} color="#066E3A" />
