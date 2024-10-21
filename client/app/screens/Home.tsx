@@ -5,6 +5,8 @@ import {
   Alert,
   Modal,
   TouchableOpacity,
+  TextInput,
+  Button,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker, Callout } from "react-native-maps";
@@ -83,6 +85,115 @@ export default function HomeScreen() {
     }
   };
 
+  // Função para adicionar um novo ponto
+  const addPonto = async (apelido: string, latitude: number, longitude: number) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/points`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apelido,
+          lat_long: { latitude, longitude },
+          notificacoes: [],
+        }),
+      });
+
+      if (response.ok) {
+        const novoPonto = await response.json();
+        setMarkers((prevMarkers) => [...prevMarkers, novoPonto]);
+      } else {
+        Alert.alert("Erro", "Erro ao adicionar ponto.");
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar ponto:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao adicionar o ponto.");
+    }
+  };
+
+  // Função para atualizar um ponto
+  const updatePonto = async (ponto: any) => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/points/${ponto._id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(ponto),
+      });
+
+      if (response.ok) {
+        const updatedPonto = await response.json();
+        setMarkers((prevMarkers) =>
+          prevMarkers.map((m) => (m._id === updatedPonto._id ? updatedPonto : m))
+        );
+        setPontoCRUDVisible(false); // Fecha o modal ao salvar
+        Alert.alert("Sucesso", "Ponto atualizado com sucesso!"); // Feedback de sucesso ao salvar
+      } else {
+        Alert.alert("Erro", "Erro ao atualizar ponto.");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar ponto:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao atualizar o ponto.");
+    }
+  };
+
+  // Função para deletar um ponto
+  const deletePonto = async (pontoId: string) => {
+    try {
+      Alert.alert(
+        "Confirmar Exclusão",
+        "Você tem certeza que deseja excluir este ponto?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Excluir",
+            onPress: async () => {
+              const token = await AsyncStorage.getItem("userToken");
+              if (!token) {
+                Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+                return;
+              }
+
+              const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/points/${pontoId}`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (response.ok) {
+                setMarkers((prevMarkers) => prevMarkers.filter((m) => m._id !== pontoId));
+                setPontoCRUDVisible(false); // Fecha o modal após deletar
+                Alert.alert("Sucesso", "Ponto deletado com sucesso!"); // Feedback de sucesso ao deletar
+              } else {
+                Alert.alert("Erro", "Erro ao deletar ponto.");
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Erro ao deletar ponto:", error);
+      Alert.alert("Erro", "Ocorreu um erro ao deletar o ponto.");
+    }
+  };
+
   // Função para obter a localização atual do aparelho
   const requestLocationPermission = async () => {
     try {
@@ -112,15 +223,7 @@ export default function HomeScreen() {
 
   const handleMapLongPress = (event: any) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
-
-    setMarkers((currentMarkers) => [
-      ...currentMarkers,
-      {
-        apelido: "Novo Ponto",
-        lat_long: { latitude, longitude },
-        notificacoes: [],
-      },
-    ]);
+    addPonto("Novo Ponto", latitude, longitude); // Adiciona um novo ponto ao banco de dados
   };
 
   const handleMarkerPress = (marker: any) => {
@@ -140,9 +243,6 @@ export default function HomeScreen() {
   const handleLocationSelect = (lat: number, lng: number) => {
     setUserLocation({ lat, lng });
   };
-
-
-  
 
   return (
     <View style={styles.container}>
@@ -181,6 +281,12 @@ export default function HomeScreen() {
                   <Text style={styles.calloutTitle}>Informações do Ponto</Text>
                   <Text>Latitude: {marker.lat_long.latitude}</Text>
                   <Text>Longitude: {marker.lat_long.longitude}</Text>
+                  <Text>
+                    Notificações:{" "}
+                    {marker.notificacoes.length > 0
+                      ? marker.notificacoes.map((n) => n.mensagem).join(", ")
+                      : "Nenhuma notificação"}
+                  </Text>
                 </View>
               </Callout>
             </Marker>
@@ -215,6 +321,8 @@ export default function HomeScreen() {
         <PontoCRUD
           visible={isPontoCRUDVisible}
           onClose={() => setPontoCRUDVisible(false)}
+          onSave={updatePonto}
+          onDelete={() => deletePonto(selectedMarker._id)}
           marker={selectedMarker}
         />
       )}
