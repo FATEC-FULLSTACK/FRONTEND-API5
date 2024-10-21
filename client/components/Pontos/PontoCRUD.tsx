@@ -50,19 +50,19 @@ const PontoCRUD = ({ visible, onClose, onSave, marker, onDelete }: any) => {
 
         {/* Latitude e Longitude como campos não editáveis com ícone de GPS */}
         <View style={styles.iconInputContainer}>
-          <MaterialIcons name="gps-fixed" size={12} color="#666" />
+          <MaterialIcons name="gps-fixed" size={24} color="#666" />
           <TextInput
             style={styles.disabledInput}
-            value={`Latitude: ${marker.lat_long.latitude}`}
+            value={`Latitude: ${marker.lat_long.latitude.toFixed(5)}`}
             editable={false}
           />
         </View>
 
         <View style={styles.iconInputContainer}>
-          <MaterialIcons name="gps-fixed" size={12} color="#666" />
+          <MaterialIcons name="gps-fixed" size={24} color="#666" />
           <TextInput
             style={styles.disabledInput}
-            value={`Longitude: ${marker.lat_long.longitude}`}
+            value={`Longitude: ${marker.lat_long.longitude.toFixed(5)}`}
             editable={false}
           />
         </View>
