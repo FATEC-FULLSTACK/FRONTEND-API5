@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { GOOGLE_API_KEY } from "@/config";
+import { GOOGLE_API_KEY } from "@/config"; 
 import Icon from "react-native-vector-icons/MaterialIcons";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
 import { router } from "expo-router";

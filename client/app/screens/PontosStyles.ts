@@ -47,6 +47,14 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 5,
   },
+
+  itemDivider: {
+    marginTop: 12,
+    marginBottom:12,
+    fontWeight:"bold",
+  }
+  ,
+
   title: {
     fontSize: 24,
     fontWeight: "bold",
