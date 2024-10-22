@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Modal, Button, TouchableOpacity } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons"; // Biblioteca de ícones
 import styles from "./PontoCRUDStyles";
@@ -8,10 +8,18 @@ const PontoCRUD = ({ visible, onClose, onSave, marker, onDelete }: any) => {
   const [notificacoes, setNotificacoes] = useState(marker.notificacoes || []);
   const [newNotificacao, setNewNotificacao] = useState("");
 
+  // Atualiza o estado local toda vez que o modal é aberto ou o marker muda
+  useEffect(() => {
+    if (marker) {
+      setApelido(marker.apelido);
+      setNotificacoes(marker.notificacoes || []);
+    }
+  }, [marker]);
+
   const handleAddNotificacao = () => {
     if (newNotificacao.trim()) {
       setNotificacoes([...notificacoes, { mensagem: newNotificacao }]);
-      setNewNotificacao(""); // Resetar campo
+      setNewNotificacao(""); // Limpar campo após adicionar
     }
   };
 
@@ -26,10 +34,12 @@ const PontoCRUD = ({ visible, onClose, onSave, marker, onDelete }: any) => {
       apelido,
       notificacoes,
     });
+    onClose(); // Fecha o modal ao salvar
   };
 
   const handleDelete = () => {
     onDelete(marker); // Chama a função para deletar o ponto
+    onClose(); // Fecha o modal após deletar
   };
 
   return (
