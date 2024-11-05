@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import styles from './PontosStyles';
 import Axios from "axios";
+import { fetchTemperatureData, fetchHumidityData, fetchPrecipitationChanceData, fetchPrecipitationData } from "../../components/ApiClima/openMeteoApi"
 
 interface Ponto {
   _id: string;
@@ -43,72 +44,82 @@ const Pontos: React.FC<PontosProps> = ({ pontos, onSelectPonto, closeModal }) =>
   useEffect(() => {
     const fetchTemperatures = async () => {
       try {
-        const tempResults = await Promise.all(pontos.map(async (ponto) => {
-          const response = await Axios.post("http://10.0.2.2:3000/nsa/temp/wk", {
-            lat: ponto.lat_long.latitude,
-            long: ponto.lat_long.longitude
-          });
-          return { [ponto._id]: response.data };
-        }));
-        
-        // Combine results into an object with ponto IDs as keys
+        const tempResults = await Promise.all(
+          pontos.map(async (ponto) => {
+            const weatherData = await fetchTemperatureData(ponto.lat_long.latitude, ponto.lat_long.longitude);
+            const hourlyTemps = weatherData.hourly.temperature_2m;
+            
+            // You may need to adjust this to extract min and max temperatures correctly
+            const maxTemp = Math.max(...hourlyTemps);
+            const minTemp = Math.min(...hourlyTemps);
+  
+            return { [ponto._id]: { maxima: maxTemp, minima: minTemp } };
+          })
+        );
+  
         const tempDataCombined = Object.assign({}, ...tempResults);
         setTempData(tempDataCombined);
       } catch (error) {
         console.error("Failed to fetch temperature data:", error);
       }
     };
-
+  
     if (pontos.length > 0) {
       fetchTemperatures();
     }
   }, [pontos]);
-
+  
   useEffect(() => {
-    const fetchHumidade = async () => {
+    const fetchHumidity = async () => {
       try {
-        const humResults = await Promise.all(pontos.map(async (ponto) => {
-          const response = await Axios.post("http://10.0.2.2:3000/nsa/humi/wk", {
-            lat: ponto.lat_long.latitude,
-            long: ponto.lat_long.longitude
-          });
-          return { [ponto._id]: response.data };
-        }));
-        
-        // Combine results into an object with ponto IDs as keys
+        const humResults = await Promise.all(
+          pontos.map(async (ponto) => {
+            const weatherData = await fetchHumidityData(ponto.lat_long.latitude, ponto.lat_long.longitude);
+            const hourlyHumidity = weatherData.hourly.relative_humidity_2m;
+            
+            const maxHum = Math.max(...hourlyHumidity);
+            const minHum = Math.min(...hourlyHumidity);
+  
+            return { [ponto._id]: { maxima: maxHum, minima: minHum } };
+          })
+        );
+  
         const humDataCombined = Object.assign({}, ...humResults);
         setHumData(humDataCombined);
       } catch (error) {
-        console.error("Failed to fetch humidade data:", error);
+        console.error("Failed to fetch humidity data:", error);
       }
     };
-
+  
     if (pontos.length > 0) {
-      fetchHumidade();
+      fetchHumidity();
     }
   }, [pontos]);
-
+  
   useEffect(() => {
-    const fetchPrecipitacao = async () => {
+    const fetchPrecipitation = async () => {
       try {
-        const precResults = await Promise.all(pontos.map(async (ponto) => {
-          const response = await Axios.post("http://10.0.2.2:3000/nsa/prec/avg", {
-            lat: ponto.lat_long.latitude,
-            long: ponto.lat_long.longitude
-          });
-          return { [ponto._id]: response.data.media };
-        }));
-        
-        // Combine results into an object with ponto IDs as keys
+        const precResults = await Promise.all(
+          pontos.map(async (ponto) => {
+            const weatherData = await fetchPrecipitationData(ponto.lat_long.latitude, ponto.lat_long.longitude);
+            const hourlyPrecipitation = weatherData.hourly.precipitation;
+  
+            // Calculate average precipitation
+            const averagePrecipitation = hourlyPrecipitation.reduce((a, b) => a + b, 0) / hourlyPrecipitation.length;
+  
+            return { [ponto._id]: averagePrecipitation };
+          })
+        );
+  
         const precDataCombined = Object.assign({}, ...precResults);
         setPrecData(precDataCombined);
       } catch (error) {
-        console.error("Failed to fetch prec data:", error);
+        console.error("Failed to fetch precipitation data:", error);
       }
     };
-
+  
     if (pontos.length > 0) {
-      fetchPrecipitacao();
+      fetchPrecipitation();
     }
   }, [pontos]);
 
