@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   infoContainer: {
-    marginLeft: 10,
+    alignContent: "center",
     flex: 1,
   },
   itemTitle: {
