@@ -1,12 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Modal, Button, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Modal,
+  Button,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons"; // Biblioteca de ícones
 import styles from "./PontoCRUDStyles";
+import { sendWeatherData } from "@/app/services/notification";
+import WeatherNotification, { fetchWeatherData } from "../NotificationBell/NotificationBell";
 
 const PontoCRUD = ({ visible, onClose, onSave, marker, onDelete }: any) => {
   const [apelido, setApelido] = useState(marker.apelido || "");
   const [notificacoes, setNotificacoes] = useState(marker.notificacoes || []);
   const [newNotificacao, setNewNotificacao] = useState("");
+  const [temperatura, setTemperatura] = useState<number>(0);
+  const [precipitacao, setPrecipitacao] = useState<number>(0);
+  const [umidade, setUmidade] = useState<number>(0);
+
+  const handleAddNotificacao = async () => {
+    try {
+      await fetchWeatherData(temperatura, umidade, precipitacao)
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível enviar os dados de clima.");
+    }
+  };
 
   // Atualiza o estado local toda vez que o modal é aberto ou o marker muda
   useEffect(() => {
@@ -15,13 +36,6 @@ const PontoCRUD = ({ visible, onClose, onSave, marker, onDelete }: any) => {
       setNotificacoes(marker.notificacoes || []);
     }
   }, [marker]);
-
-  const handleAddNotificacao = () => {
-    if (newNotificacao.trim()) {
-      setNotificacoes([...notificacoes, { mensagem: newNotificacao }]);
-      setNewNotificacao(""); // Limpar campo após adicionar
-    }
-  };
 
   const handleRemoveNotificacao = (index: number) => {
     const updatedNotificacoes = notificacoes.filter((_, i) => i !== index);
@@ -77,26 +91,41 @@ const PontoCRUD = ({ visible, onClose, onSave, marker, onDelete }: any) => {
           />
         </View>
 
-        {/* Notificações */}
         <View style={styles.notificationContainer}>
-          <Text style={styles.sectionTitle}>Notificações:</Text>
+          {/* <Text style={styles.sectionTitle}>Notificações:</Text>
           {notificacoes.map((notificacao: any, index: number) => (
             <View key={index} style={styles.notificationRow}>
-              <Text style={styles.notificationText}>{notificacao.mensagem}</Text>
+              <Text style={styles.notificationText}>
+                {notificacao.mensagem}
+              </Text>
               <TouchableOpacity onPress={() => handleRemoveNotificacao(index)}>
                 <FontAwesome name="minus-circle" size={20} color="red" />
               </TouchableOpacity>
             </View>
-          ))}
+          ))}  */}
 
           {/* Adicionar nova notificação */}
           <View style={styles.addNotificationContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Nova Notificação"
-              value={newNotificacao}
-              onChangeText={setNewNotificacao}
-            />
+            <View style={styles.addNotificationInputs}>
+              <TextInput
+                style={styles.input}
+                placeholder="Define um limite de temperatura"
+                value={String(temperatura)} // Converte para string
+                onChangeText={(text) => setTemperatura(Number(text))}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Defina um limite de precipitação"
+                value={String(precipitacao)} // Converte para string
+                onChangeText={(text) => setPrecipitacao(Number(text))}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Defina um limite de umidade"
+                value={String(umidade)} // Converte para string
+                onChangeText={(text) => setUmidade(Number(text))}
+              />
+            </View>
             <TouchableOpacity onPress={handleAddNotificacao}>
               <FontAwesome name="plus-circle" size={20} color="green" />
             </TouchableOpacity>

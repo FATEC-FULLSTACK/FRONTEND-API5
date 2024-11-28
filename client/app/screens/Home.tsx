@@ -17,16 +17,55 @@ import Pontos from "./Pontos";
 import NavFooter from "@/components/Nav/NavFooter";
 import SearchLocation from "@/components/SearchLocation/SearchLocation";
 import styles from "./HomeScreenStyles";
+import WeatherNotification from "@/components/NotificationBell/NotificationBell";
 
 export default function HomeScreen() {
   const [userData, setUserData] = useState<any>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [markers, setMarkers] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<any | null>(null);
   const [isPontoCRUDVisible, setPontoCRUDVisible] = useState(false);
   const [isPontosModalVisible, setIsPontosModalVisible] = useState(false);
   const [focusedItem, setFocusedItem] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<any[]>([]); // Armazenar as notificações
+  const [unreadCount, setUnreadCount] = useState(0); // Contagem de notificações não lidas
+
+  const handleNotification = (type: string) => {
+    let newNotification = {};
+
+    switch (type) {
+      case "umidade":
+        newNotification = {
+          id: Date.now(),
+          message: "Alerta: Umidade alta detectada!",
+        };
+        break;
+      case "temperatura":
+        newNotification = {
+          id: Date.now(),
+          message: "Alerta: Temperatura elevada detectada!",
+        };
+        break;
+      case "precipitacao":
+        newNotification = {
+          id: Date.now(),
+          message: "Alerta: Possível precipitação detectada!",
+        };
+        break;
+      default:
+        return;
+    }
+
+    setNotifications((prevNotifications) => [
+      ...prevNotifications,
+      newNotification,
+    ]);
+    setUnreadCount((prevCount) => prevCount + 1);
+  };
 
   // Função para buscar os dados do usuário
   const fetchUserData = async () => {
@@ -67,11 +106,14 @@ export default function HomeScreen() {
         return;
       }
 
-      const response = await fetch(`http://10.0.2.2:3000/user/${userId}/points`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://10.0.2.2:3000/user/${userId}/points`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const pontos = await response.json();
@@ -86,7 +128,11 @@ export default function HomeScreen() {
   };
 
   // Função para adicionar um novo ponto
-  const addPonto = async (apelido: string, latitude: number, longitude: number) => {
+  const addPonto = async (
+    apelido: string,
+    latitude: number,
+    longitude: number
+  ) => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       if (!token) {
@@ -94,18 +140,21 @@ export default function HomeScreen() {
         return;
       }
 
-      const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/points`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          apelido,
-          lat_long: { latitude, longitude },
-          notificacoes: [],
-        }),
-      });
+      const response = await fetch(
+        `http://10.0.2.2:3000/user/${userData._id}/points`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            apelido,
+            lat_long: { latitude, longitude },
+            notificacoes: [],
+          }),
+        }
+      );
 
       if (response.ok) {
         const novoPonto = await response.json();
@@ -128,19 +177,24 @@ export default function HomeScreen() {
         return;
       }
 
-      const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/points/${ponto._id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(ponto),
-      });
+      const response = await fetch(
+        `http://10.0.2.2:3000/user/${userData._id}/points/${ponto._id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(ponto),
+        }
+      );
 
       if (response.ok) {
         const updatedPonto = await response.json();
         setMarkers((prevMarkers) =>
-          prevMarkers.map((m) => (m._id === updatedPonto._id ? updatedPonto : m))
+          prevMarkers.map((m) =>
+            m._id === updatedPonto._id ? updatedPonto : m
+          )
         );
         setPontoCRUDVisible(false); // Fecha o modal ao salvar
         Alert.alert("Sucesso", "Ponto atualizado com sucesso!"); // Feedback de sucesso ao salvar
@@ -166,19 +220,27 @@ export default function HomeScreen() {
             onPress: async () => {
               const token = await AsyncStorage.getItem("userToken");
               if (!token) {
-                Alert.alert("Erro", "Nenhum token encontrado. Faça login novamente.");
+                Alert.alert(
+                  "Erro",
+                  "Nenhum token encontrado. Faça login novamente."
+                );
                 return;
               }
 
-              const response = await fetch(`http://10.0.2.2:3000/user/${userData._id}/points/${pontoId}`, {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
+              const response = await fetch(
+                `http://10.0.2.2:3000/user/${userData._id}/points/${pontoId}`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
 
               if (response.ok) {
-                setMarkers((prevMarkers) => prevMarkers.filter((m) => m._id !== pontoId));
+                setMarkers((prevMarkers) =>
+                  prevMarkers.filter((m) => m._id !== pontoId)
+                );
                 setPontoCRUDVisible(false); // Fecha o modal após deletar
                 Alert.alert("Sucesso", "Ponto deletado com sucesso!"); // Feedback de sucesso ao deletar
               } else {
@@ -199,7 +261,9 @@ export default function HomeScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Permissão de localização negada. Usando localização padrão.");
+        setErrorMsg(
+          "Permissão de localização negada. Usando localização padrão."
+        );
         setUserLocation({ lat: -23.5505, lng: -46.6333 }); // São Paulo como fallback
         return;
       }
@@ -248,7 +312,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.HomeTitleContainer}>
         <Text style={styles.HomeTitle}>Kersys</Text>
-        <FontAwesomeIcon name="bell" size={20} color="#FFFFFF" style={styles.notificationIcon} />
+        <WeatherNotification/>
       </View>
 
       {/* Componente de busca de localização */}
@@ -284,7 +348,7 @@ export default function HomeScreen() {
                   <Text>
                     Notificações:{" "}
                     {marker.notificacoes.length > 0
-                      ? marker.notificacoes.map((n) => n.mensagem).join(", ")
+                      ? marker.notificacoes.map((n:any) => n.mensagem).join(", ")
                       : "Nenhuma notificação"}
                   </Text>
                 </View>

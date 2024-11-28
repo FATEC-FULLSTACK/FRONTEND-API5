@@ -1,14 +1,28 @@
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
+  notificationIcon: {
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'red',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   container: {
     flex: 1,
     backgroundColor: "#f2f2f2",
-  },
-  notificationIcon: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    color: "#066E3A",
   },
   HomeTitle: {
     fontSize: 18,
