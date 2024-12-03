@@ -29,9 +29,6 @@ const styles = StyleSheet.create({
   },
   input: {
     borderBottomWidth: 1,
-    marginBottom: 10,
-    padding: 8,
-    flex: 1,
   },
   disabledInput: {
     backgroundColor: "white",
@@ -55,11 +52,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   addNotificationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     marginTop: 10,
-    width: "100%",
+  },
+  addNotificationInputs: {
+    flexDirection: "column",
+    gap: 5,
+    marginBottom: 15
   },
   picker: {
     height: 50,
