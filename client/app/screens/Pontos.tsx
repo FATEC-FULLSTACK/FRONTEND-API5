@@ -28,7 +28,13 @@ interface Ponto {
       min: number;
       media: number;
     };
-  }
+  };
+  limites: {
+    max_temp: number;
+    max_hum: number;
+    min_temp: number;
+    min_hum: number;
+  };
 }
 
 interface PontosProps {
